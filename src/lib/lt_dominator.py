@@ -1,9 +1,7 @@
 from crawler_type import graph_t, lt_graph_t, g_map_t, g_node_t
 
 """
-Ported to python from the javascript implementation (MIT License) at https://github.com/julianjensen/dominators/
-
--- Thank you, Julian Jensen.
+Ported to python from the javascript implementation (MIT License) found at https://github.com/julianjensen/dominators/
 
 """
 

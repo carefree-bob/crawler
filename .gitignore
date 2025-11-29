@@ -4,4 +4,6 @@ docs
 __pycache__
 .env
 .venv
+*.png
+
 
