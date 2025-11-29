@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import TypeAlias
 
-graph_t: TypeAlias=dict[int, dict[int, ...]]
+graph_t: TypeAlias=dict[int, list[int]]
 order_t: TypeAlias=tuple[int, ...]
 
-# when we want to map one labelling to another instead of getting a tuple
+# when we want to map one labelling to another
 g_map_t: TypeAlias=dict[int, int]
 
 """

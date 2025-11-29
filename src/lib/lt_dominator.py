@@ -20,8 +20,6 @@ bucket_ = "bucket"
 idom_ = "idom"
 anc_ = "anc"
 
-
-
 def init_lt(graph: graph_t) -> tuple[lt_graph_t, g_map_t, g_map_t]:
     """Perform DFS to generate graph with g_node_t and produce mappings
     Args:
@@ -51,7 +49,6 @@ def init_lt(graph: graph_t) -> tuple[lt_graph_t, g_map_t, g_map_t]:
     # 2. Iterative DFS (Post-Order Sequence, Ancestor, and Predecessors)
     while stack:
         u = stack[-1]
-
         children = graph.get(u, ())
 
         # Check children
@@ -138,7 +135,17 @@ def lt_eval(node: g_node_t, graph: lt_graph_t) -> g_node_t:
     return graph[node[best_]]
 
 
-def gen_lt(graph: graph_t):
+def gen_lt_graph(g: graph_t)->tuple[lt_graph_t, g_map_t, g_map_t]:
+    """Use Lengauer-Tarjan to calculate dominator. Returns a fat graph
+    in reverse post-order indexing, and mapping dicts to get back to original graph
+
+    Args:
+        g (graph_t): original graph
+
+    Returns:
+        fat graph with immediate dominators and predecessors, index mapping from list index to reverse post order, index mapping from reverse post order to list index
+    """
+    graph, pre, rev = init_lt(g)
     for i in range(len(graph) - 1, 0, -1):
         n = graph[i]
 
@@ -167,6 +174,6 @@ def gen_lt(graph: graph_t):
         p_node[bucket_] = []
 
     graph[0][idom_] = None
-    return graph
+    return graph, pre, rev
 
 
