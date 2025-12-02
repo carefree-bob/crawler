@@ -32,11 +32,11 @@ def get_dominator_tree(g: graph_t)->graph_t:
 def get_dominance_frontier(g:graph_t, return_orig_number=True)->graph_t:
 
     graph, pre, rev = gen_lt_graph(g)
-    start, _ = next(iter(g.items()))
-    dom_frontier = {idx: [] for idx, _ in g.items()}
+    start = list(g.keys())[0]
+    dom_frontier = {idx: [] for idx, _ in graph.items()}
 
     for idx, node in graph.items():
-        if len(node["preds"]) >= 2:
+        if idx == start or len(node["preds"]) >= 2:
             for pred in node["preds"]:  # predecessors in G
                 curr_idx = pred
                 while curr_idx != node["idom"]:
