@@ -26,6 +26,7 @@ def dfs_pre_order_traversal(graph: graph_t) -> order_t:
 
 
 def dfs_post_order_traversal(graph: graph_t)->order_t:
+    """Perform post order traversal"""
     start, children = next(iter(graph.items()))
     stack = [start]
     processing = {g: 0 for g, _ in graph.items()} # points to index of processed child
