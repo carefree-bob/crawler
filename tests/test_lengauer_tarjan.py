@@ -1,14 +1,16 @@
 import unittest
+
 import networkx as nx
-import tests.test_data.graph_simple as gs
+
 from src.lib.lengauer_tarjan import init_lt, gen_lt_graph
+from tests.base_test import BaseCase
 from tests.helper import g_to_nx
 
 """
 Small unit tests to catch errors when initializing l-t data structures for pre-order traversals
 """
 
-class TestInit(unittest.TestCase):
+class TestInit(BaseCase):
     def test_init_lt_simple1(self):
         g = {0: [1,2], 1: [], 2: []}
         lt_g, pre, rev = init_lt(g)
@@ -105,10 +107,9 @@ class TestInit(unittest.TestCase):
             5: {'anc': None, 'best': 5, 'bucket': [], 'idom': None, 'parent': 4, 'pre': 5, 'preds': [4], 'semi': 5, 'succs': [4]}
         })
 
-class TestExamples(unittest.TestCase):
+class TestExamples(BaseCase):
     def test_examples(self):
-        for n in range(1,9):
-            g = getattr(gs, f"graph_{n}")
+        for g in self.graphs:
             start, _ = next(iter(g.items()))
             nx_g = g_to_nx(g)
             graph, pre, rev = gen_lt_graph(g)

@@ -7,7 +7,7 @@ import networkx as nx
 from PIL import Image  # Pillow library
 
 import tests.test_data.graph_simple as gs
-from src.lib.crawler_type import graph_t
+from src.lib.crawler_type import graph_t, order_t
 
 
 def g_to_nx(g: graph_t) -> nx.DiGraph:
@@ -16,9 +16,15 @@ def g_to_nx(g: graph_t) -> nx.DiGraph:
 def nx_to_g(nx_g: nx.DiGraph) -> graph_t:
     return nx.to_dict_of_lists(nx_g)
 
-def get_nx_post_order(g:graph_t)-> graph_t:
+def get_nx_post_order(g:graph_t)-> order_t:
     nx_g = g_to_nx(g)
-    return nx.dfs_postorder_nodes(nx_g)
+    start, _ = next(iter(g.items()))
+    return tuple(nx.dfs_postorder_nodes(nx_g, source=start))
+
+def get_nx_pre_order(g:graph_t) -> order_t:
+    nx_g = g_to_nx(g)
+    start, _ = next(iter(g.items()))
+    return tuple(nx.dfs_preorder_nodes(nx_g, source=start))
 
 def get_dominance_frontier_via_nx(g:graph_t)->graph_t:
     nx_g = g_to_nx(g)
@@ -105,6 +111,9 @@ def gen_random_graph(max_total_nodes: int=20, max_outbound_each=10, degree_conne
 
     return graph
 
+
+def sort_dict(d:dict)->dict:
+    return {k: sorted(val) for (k, val) in d.items()}
 
 
 

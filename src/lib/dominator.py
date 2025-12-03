@@ -29,7 +29,7 @@ def get_dominator_tree(g: graph_t)->graph_t:
 def get_dominance_frontier_from_nodal(graph: lt_graph_t)->graph_t:
     """Accepts a fat graph with idoms, preds and returns a graph_t
     with the dominance frontier in pre-order"""
-    start, _ = next(iter(lt_graph_t.items()))
+    start, _ = next(iter(graph.items()))
     dom_frontier = {idx: set() for idx, _ in graph.items()}
     idoms = {x: node["idom"] for x, node in graph.items() if
              (node["idom"] is not None or x == start)}
@@ -42,7 +42,7 @@ def get_dominance_frontier_from_nodal(graph: lt_graph_t)->graph_t:
                         dom_frontier[curr_idx].add(idx)
                         curr_idx = graph[curr_idx]["idom"]
 
-    return {x : list(v) for x, v in idoms.items()}
+    return {x : list(v) for x, v in dom_frontier.items()}
 
 
 def get_dominance_frontier(g:graph_t, return_orig_number=True
