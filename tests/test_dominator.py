@@ -22,8 +22,23 @@ class TestDominator(unittest.TestCase):
 
             self.assertEqual(sort_dict(d_nx), sort_dict(d_ours))
 
+    def test_get_dominance_frontier(self):
+        for g in self.graphs:
+            df_ours = get_dominance_frontier(g)
+            df_nx = get_dominance_frontier_via_nx(g)
+            print(f"g is {g}")
+            self.assertEqual(sort_dict(df_nx), sort_dict(df_ours))
 
-
+    def test_get_dominance_frontier_root(self):
+        g = {
+            0:[1],
+            1:[0,2],
+            2:[]
+             }
+        df_ours = get_dominance_frontier(g)
+        df_nx = get_dominance_frontier_via_nx(g)
+        print(f"g is {g}")
+        self.assertEqual(sort_dict(df_nx), sort_dict(df_ours))
 
 if __name__ == '__main__':
     unittest.main()
