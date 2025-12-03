@@ -33,7 +33,7 @@ def dfs_post_order_traversal(graph: graph_t)->order_t:
 
     Returns:
         order_t tuple of nodes
-        
+
     """
     start, children = next(iter(graph.items()))
     stack = [start]
