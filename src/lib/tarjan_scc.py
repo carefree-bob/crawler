@@ -1,11 +1,11 @@
 from src.lib.crawler_type import graph_t
 
 """
-Tarjan SCC, from networkx library (BSD License) 
+Tarjan SCC, ported from networkx library (BSD License) 
 
 """
 def get_tarjan_scc(graph: graph_t)->list[set[int]]:
-    """NetworkX Tarjan SCC implementation
+    """get list of scc components
 
     Args:
         graph (graph_t):
