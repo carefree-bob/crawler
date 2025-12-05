@@ -3,7 +3,7 @@ import unittest
 
 from src.lib.crawler_type import Reduce
 from src.lib.graph_utils import get_preds
-from src.lib.hecht_ullman_reduction import init_t1t2, reduce_graph, recover_orig_data
+from src.lib.hecht_ullman_reduction import init_t1t2, get_reduced_graph, recover_orig_data
 from tests.base_test import BaseCase
 from tests.helper import g_to_nx, sort_dict
 
@@ -23,7 +23,7 @@ class TestHechtUllman(BaseCase):
 
     def test_reduce_trivial(self):
         g = {0:[]}
-        data = reduce_graph(g)
+        data = get_reduced_graph(g)
         self.assertEqual({
             'start': 0,
             'graph': {0: []},
@@ -34,7 +34,7 @@ class TestHechtUllman(BaseCase):
 
     def test_reduce_t1_single(self):
         g = {0:[0]}
-        data = reduce_graph(g)
+        data = get_reduced_graph(g)
         self.assertEqual({
             'start': 0,
             'graph': {0: []},
@@ -45,7 +45,7 @@ class TestHechtUllman(BaseCase):
 
     def test_reduce_t2_single(self):
         g = {0:[1], 1:[]}
-        data = reduce_graph(g)
+        data = get_reduced_graph(g)
         self.assertEqual({
             'start': 0,
             'graph': {0: []},
@@ -56,7 +56,7 @@ class TestHechtUllman(BaseCase):
 
     def test_reduce_t2_double(self):
         g = {0:[1], 1:[2], 2:[]}
-        data = reduce_graph(g)
+        data = get_reduced_graph(g)
         self.assertEqual({
             'start': 0,
             'graph': {0: []},
@@ -68,7 +68,7 @@ class TestHechtUllman(BaseCase):
 
     def test_reduce_cycle(self):
         g = {0:[1], 1:[0]}
-        data = reduce_graph(g)
+        data = get_reduced_graph(g)
         self.assertEqual(
             {'start': 0,
                 'graph': {0: []},
@@ -81,14 +81,13 @@ class TestHechtUllman(BaseCase):
 
     def test_simple_graphs_weights(self):
         for g in self.graphs:
-            data = reduce_graph(g)
+            data = get_reduced_graph(g)
             self.assertEqual(sum(data["weights"].values()), len(g))
 
     def test_simple_graphs_preds(self):
         # check that predecessors are correctly generated
         for i, g in enumerate(self.graphs):
-            print(f"graph {i}")
-            data = reduce_graph(g)
+            data = get_reduced_graph(g)
             preds = data["preds"]
             graph = data["graph"]
             exp_preds = get_preds(graph)
@@ -96,13 +95,15 @@ class TestHechtUllman(BaseCase):
 
     def test_simple_graph_reversible(self):
         for i, g in enumerate(self.graphs):
-            print(f"graph {i}")
-            if i == 2:
-                h = copy.deepcopy(g)
-                data = reduce_graph(h)
-                data_recover = recover_orig_data(data)
-                self.assertEqual(sort_dict(g), sort_dict(data_recover["graph"]))
-                self.assertEqual(data_recover["log"], [])
+            h = copy.deepcopy(g)
+            data = get_reduced_graph(g)
+            data_recover = recover_orig_data(data)
+
+            # check that we have not mutated g
+            self.assertEqual(g, h)
+            self.assertEqual(sort_dict(g), sort_dict(data_recover["graph"]))
+            self.assertEqual(data_recover["log"], [])
+            self.assertEqual(sort_dict(data), sort_dict(data_recover))
 
 
 if __name__ == '__main__':

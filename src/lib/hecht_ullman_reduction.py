@@ -136,7 +136,7 @@ def init_t1t2(graph: graph_t, weights: weights_t | None=None) -> T1T2Data:
         }
 
 
-def reduce_graph(graph: graph_t, weights: weights_t=None) -> T1T2Data:
+def get_reduced_graph(graph: graph_t, weights: weights_t=None) -> T1T2Data:
     """Reduce graph according to T1-T2 Hecht-Ullman reduction.
 
     Args:
@@ -214,9 +214,7 @@ def recover_orig_data(data: T1T2Data) -> T1T2Data:
             for x in preds[node]:
                 if node not in graph[x]:
                     graph[x].append(node)
-                # Generally predecessors of parent are untouched by T2, but there is a special
-                # loopback case -- if node pointed to parent, then after T2 it is
-                # now a predecessor to parent.
+
                 if parent in graph[x] and x not in preds[parent]:
                     graph[x].remove(parent)
 

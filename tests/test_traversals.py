@@ -1,6 +1,6 @@
 import unittest
 
-from src.lib.traversals import dfs_pre_order_traversal, dfs_post_order_traversal
+from src.lib.graph_utils import dfs_pre_order_traversal, dfs_post_order_traversal
 from tests.base_test import BaseCase
 from tests.helper import get_nx_post_order, get_nx_pre_order
 
