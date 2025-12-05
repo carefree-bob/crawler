@@ -113,8 +113,12 @@ def gen_random_graph(max_total_nodes: int=20, max_outbound_each=10, degree_conne
 
 
 def sort_dict(d:dict)->dict:
-    return {k: sorted(val) for (k, val) in d.items()}
-
+    if isinstance(d, dict):
+        return {k: sort_dict(val) for (k, val) in d.items()}
+    elif isinstance(d, list):
+        return sorted(d)
+    else:
+        return d
 
 
 if __name__ == '__main__':

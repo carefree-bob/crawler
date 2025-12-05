@@ -56,3 +56,37 @@ def dfs_post_order_traversal(graph: graph_t)->order_t:
             stack.pop()
 
     return tuple(visited)
+
+def reverse_graph(g: graph_t)->graph_t:
+    start, _ = next(iter(g.items()))
+    new_graph = {start: []}
+    found_root = False
+    for node, ancestors in g.items():
+        if ancestors:
+            for anc in ancestors:
+                if anc in new_graph:
+                    new_graph[anc].append(node)
+                else:
+                    new_graph[anc] = [node]
+        else:
+            if found_root:
+                raise ValueError("Cannot reverse a graph with multiple end nodes")
+            found_root = True
+            # make sure first element is root
+            new_graph = {node: []} | new_graph
+    return new_graph
+
+def get_preds(g: graph_t)->graph_t:
+    start, _ = next(iter(g.items()))
+    new_graph = {start: []}
+    for node, ancestors in g.items():
+        if ancestors:
+            for anc in ancestors:
+                if anc in new_graph:
+                    new_graph[anc].append(node)
+                else:
+                    new_graph[anc] = [node]
+        else:
+            # make sure first element is root
+            new_graph = {node: []} | new_graph
+    return new_graph

@@ -1,4 +1,5 @@
 from src.lib.crawler_type import graph_t, lt_graph_t
+from src.lib.graph_utils import reverse_graph
 from src.lib.lengauer_tarjan import gen_lt_graph
 
 def get_dominator_tree(g: graph_t)->graph_t:
@@ -59,6 +60,7 @@ def get_dominance_frontier(g:graph_t, return_orig_number=True
 def get_post_dominance_frontier(g: graph_t)-> graph_t:
     z = -1
     g_z = {k:v if v else [-1] for k,v in g} | {z: []}
+    g_z = reverse_graph(g_z)
     graph_z, pre, rev = lt_graph_t(g_z)
     df = get_dominance_frontier_from_nodal(graph_z)
     return {x:v for x, v in df if x != z}
