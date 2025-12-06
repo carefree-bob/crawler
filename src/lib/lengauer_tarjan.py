@@ -104,13 +104,12 @@ def lt_eval(node: g_node_t, graph: lt_graph_t) -> g_node_t:
 def gen_lt_graph(g: graph_t) -> tuple[lt_graph_t, g_map_t, g_map_t]:
     graph, pre, rev = init_lt(g)
 
-    # 1. First Pass
+    # first pass (decreasing for semi-doms)
     for i in range(len(graph) - 1, 0, -1):
         curr_node = graph[i]
         parent_idx = curr_node[PARENT]
         parent_node = graph[parent_idx]
 
-        # 1a. Compute Semi-dominator
         for j in curr_node[PREDS]:
             j_node = graph[j]
             j_best_node = lt_eval(j_node, graph=graph)
@@ -118,13 +117,11 @@ def gen_lt_graph(g: graph_t) -> tuple[lt_graph_t, g_map_t, g_map_t]:
             if j_best_node[SEMI] < curr_node[SEMI]:
                 curr_node[SEMI] = j_best_node[SEMI]
 
-        # 1b. Add to bucket
         graph[curr_node[SEMI]][BUCKET].append(curr_node[PRE])
 
-        # 1c. Link to DSU forest
+        # Link to DSU forest
         curr_node[ANC] = parent_idx
 
-        # 1d. Process Parent's Bucket
         while parent_node[BUCKET]:
             b_idx = parent_node[BUCKET].pop()
             b_node = graph[b_idx]
@@ -136,7 +133,7 @@ def gen_lt_graph(g: graph_t) -> tuple[lt_graph_t, g_map_t, g_map_t]:
             else:
                 b_node[IDOM] = parent_idx
 
-                # 2. Second Pass: Explicit IDOMs
+    # Second Pass (increasing) for idom
     for i in range(1, len(graph)):
         node = graph[i]
         if node[IDOM] != node[SEMI]:
