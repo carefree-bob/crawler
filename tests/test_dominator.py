@@ -18,7 +18,8 @@ class TestDominator(BaseCase):
             self.assertEqual(sort_dict(d_nx), sort_dict(d_ours))
 
     def test_get_dominance_frontier(self):
-        for g in self.graphs:
+        for i, g in enumerate(self.graphs):
+            print(f"graph {i}")
             df_ours = get_dominance_frontier(g)
             df_nx = get_dominance_frontier_via_nx(g)
             print(f"g is {g}")

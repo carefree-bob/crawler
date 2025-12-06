@@ -8,7 +8,17 @@ from PIL import Image  # Pillow library
 
 import tests.test_data.graph_simple as gs
 from src.lib.crawler_type import graph_t, order_t
+def validate(g: graph_t) -> graph_t:
+    # make sure there are always ancestors
+    for node, anc in g.items():
+        if g[node] is None:
+            raise ValueError("missing ancestor!")
+        if not isinstance(g[node], list):
+            raise ValueError("ancestors are not lists!")
+        if len(anc) != len(set(anc)):
+            raise ValueError("doubled path!")
 
+    return g
 
 def g_to_nx(g: graph_t) -> nx.DiGraph:
     return nx.from_dict_of_lists(g, create_using=nx.DiGraph)

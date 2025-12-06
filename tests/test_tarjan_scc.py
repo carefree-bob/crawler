@@ -8,10 +8,9 @@ class MyTestCase(BaseCase):
 
     def test_tarjan_scc(self):
         for g in self.graphs:
-            scc_ours = get_tarjan_scc(g)
-            scc_nx = list(nx.strongly_connected_components(g_to_nx(g)))
-            # since our code is just a port of nx this should always be true
-            self.assertEqual(scc_nx, scc_ours)  # add assertion here
+            scc_ours = list(sorted(x) for x in get_tarjan_scc(g))
+            scc_nx = list(sorted(list(x)) for x in nx.strongly_connected_components(g_to_nx(g)))
+            self.assertEqual(scc_nx, scc_ours)
 
 
 if __name__ == '__main__':

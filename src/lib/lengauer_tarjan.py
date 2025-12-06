@@ -1,163 +1,145 @@
 from src.lib.crawler_type import graph_t, lt_graph_t, g_map_t, g_node_t
 
-"""
-Uses the 'simple' link-eval without tree rebalancing. 
-
-"""
-
-"""
-Fake enums, to help with typos
-"""
-PRE = "pre" # pre-order ordering index (int, never empty)
-SUCCS = "succs" # successors of node (list, [] if empty)
-PREDS = "preds"  # predecessors of node (include those not in DFS) (list, [] only for root)
-PARENT = "parent" # unique DFS parent (int, None only for root)
-SEMI = "semi" # semi-dominator candidate (int, never empty)
-BEST = "best" # smallest semi value (int, never null)
-BUCKET = "bucket" # container (list, [] if empty)
-IDOM = "idom" # immediate dominator (int, None if empty)
-ANC = "anc" # link to forest DSU for this node (int, None if empty)
+PRE = "pre"
+SUCCS = "succs"
+PREDS = "preds"
+PARENT = "parent"
+SEMI = "semi"
+BEST = "best"
+BUCKET = "bucket"
+IDOM = "idom"
+ANC = "anc"
 
 
 def init_lt(graph: graph_t) -> tuple[lt_graph_t, g_map_t, g_map_t]:
-    """Perform DFS pre-order to generate graph with g_node_t and produce mappings
-    Args:
-        graph (graph_t): array graph
-
-    Returns:
-        lt_graph (fat dictionary). All entries in lt_graph are in pre-order index
-        pre_map (g_map_t) map from list index to pre-order index
-        rev_map (g_map_t) reverse of pre_map, taking pre-order to list index
     """
-
+    Initializes the graph for L-T algorithm.
+    """
     start, _ = next(iter(graph.items()))
     stack = [start]
     visited = []
-    pred_map = {g:set() for g, _ in graph.items()}  # track predecessors
+
+    # Track predecessors for ALL nodes initially
+    raw_pred_map = {g: set() for g in graph}
     dfs_parent = {start: None}
 
     while stack:
         node = stack.pop()
         if node not in visited:
             visited.append(node)
-            for child in reversed(graph.get(node, [])):
-                pred_map[child].add(node)
+            # Use strict list to ensure order doesn't fluctuate
+            children = graph.get(node, [])
+            for child in reversed(children):
+                raw_pred_map[child].add(node)
                 if child not in visited:
                     dfs_parent[child] = node
                     stack.append(child)
 
     pre = {node: i for i, node in enumerate(visited)}
-
-    # Rev: pre-order Index -> list Index
     rev = {i: node for i, node in enumerate(visited)}
 
-    # Ancestor: pre-order Index -> Index of its DFS parent
     ancestor = {}
     for original_id, parent_id in dfs_parent.items():
-        if parent_id is not None:
-            ancestor[pre[original_id]] = pre[parent_id]
-        else:
-            # root has no ancestor
-            ancestor[pre[original_id]] = None
+        if original_id in pre:
+            ancestor[pre[original_id]] = pre[parent_id] if parent_id is not None else None
 
-    # build up graph node
     lt_graph = {idx: {
-        PRE : idx,
-        SUCCS : [pre[c] for c in graph[rev[idx]]], # the graph gives us successors!
-        PREDS : [pre[u] for u in pred_map[rev[idx]]],
-        PARENT : ancestor[idx] if idx in ancestor else None,
-        SEMI : idx, # initialize to each node
-        BEST : idx, # initialize to each node
-        BUCKET : [],  # initialize to empty
-        IDOM : None,  # initialize to empty
-        ANC : None # this will hold link to DSU forest
+        PRE: idx,
+        # Safety: Only include nodes that are actually in our DFS tree (reachable)
+        SUCCS: [pre[c] for c in graph[rev[idx]] if c in pre],
+        PREDS: [pre[u] for u in raw_pred_map[rev[idx]] if u in pre],
+        PARENT: ancestor[idx] if idx in ancestor else None,
+        SEMI: idx,
+        BEST: idx,
+        BUCKET: [],
+        IDOM: None,
+        ANC: None
     } for idx in range(len(visited))}
 
     return lt_graph, pre, rev
 
 
 def lt_eval(node: g_node_t, graph: lt_graph_t) -> g_node_t:
-    """Performs Find(node) with path compression and best-link update. Path
-    compression updates ancestors to point at the (higher) best node: e.g. the
-    node with the smallest RPO index. """
+    """
+    Iterative version of Find/Compress.
+    Simulates recursion by collecting the path to root and processing top-down.
+    """
+    ancestor_idx = node[ANC]
 
-    anc_node = node[ANC]
-    # check if this is a root node (only node with ancestor = None)
-    if anc_node is None:
+    # 1. Base case: If root of DSU tree, return node itself
+    if ancestor_idx is None:
         return node
 
-    # check if parent is a root node, so parent_ancestor is None
-    if graph[anc_node][ANC] is None:
-        return graph[node[BEST]]
+    # 2. Build the path from 'node' up to the DSU root
+    # path will be [node, parent, grandparent, ... root]
+    path = [node]
+    curr = node
+    while curr[ANC] is not None:
+        parent_node = graph[curr[ANC]]
+        path.append(parent_node)
+        curr = parent_node
 
-    # Push entire ancestor chain (path compression)
-    path = []
-    x = node
-    while True:
-        path.append(x)
-        if x[ANC] is None:
-            break
-        x = graph[x[ANC]]
+    # 3. Traverse the path Top-Down (Reverse order) to apply compression.
+    # We skip the very last element (Root) and the second to last (Child of Root),
+    # because the Child of Root points to Root and needs no update.
+    # range(start, stop, step)
+    # Start at Grandchild of Root (index len-3) down to Node (index 0)
+    for i in range(len(path) - 3, -1, -1):
+        curr_node = path[i]
+        parent_node = path[i + 1]  # This is the parent in the original tree structure
 
-    # Now, compress the path
-    for idx, node_to_compress in enumerate(path[:-1]):
-        ancestor_node = path[idx + 1]
+        # At this point, thanks to the top-down loop, 'parent_node'
+        # has already been compressed and points to the Root.
 
-        # If the ancestor's best semi-dominator is better than our current best, update ours.
-        if graph[ancestor_node[BEST]][SEMI] < graph[node_to_compress[BEST]][SEMI]:
-            node_to_compress[BEST] = ancestor_node[BEST]
+        # Update BEST if the parent's compressed best is better
+        if graph[parent_node[BEST]][SEMI] < graph[curr_node[BEST]][SEMI]:
+            curr_node[BEST] = parent_node[BEST]
 
-        # 2. Path Compression: Make node point to its grandparent's index.
-        node_to_compress[ANC] = ancestor_node[ANC]
+        # Path Compression: Point current node directly to where parent points
+        curr_node[ANC] = parent_node[ANC]
 
     return graph[node[BEST]]
 
 
-def gen_lt_graph(g: graph_t)->tuple[lt_graph_t, g_map_t, g_map_t]:
-    """Use Lengauer-Tarjan to calculate dominator. Returns a fat graph
-    in reverse post-order indexing, and mapping dicts to get back to original graph
-
-    Args:
-        g (graph_t): original graph
-
-    Returns:
-        fat graph with immediate dominators and predecessors, index mapping from list index to reverse post order, index mapping from reverse post order to list index
-    """
+def gen_lt_graph(g: graph_t) -> tuple[lt_graph_t, g_map_t, g_map_t]:
     graph, pre, rev = init_lt(g)
 
-    # 1. First Pass: Semi-Dominators and Implicit IDOMs
+    # 1. First Pass
     for i in range(len(graph) - 1, 0, -1):
         curr_node = graph[i]
-
         parent_idx = curr_node[PARENT]
         parent_node = graph[parent_idx]
 
-        # 1a. Compute Semi-dominator (semi) of all predecessors
+        # 1a. Compute Semi-dominator
         for j in curr_node[PREDS]:
-            j_best_node = lt_eval(graph[j], graph=graph)
+            j_node = graph[j]
+            j_best_node = lt_eval(j_node, graph=graph)
+
             if j_best_node[SEMI] < curr_node[SEMI]:
                 curr_node[SEMI] = j_best_node[SEMI]
 
-        # 1b. Place node in the bucket of its semi-dominator
+        # 1b. Add to bucket
         graph[curr_node[SEMI]][BUCKET].append(curr_node[PRE])
 
-        # 1c. Link parent of current node to DSU (Union-Find Link)
+        # 1c. Link to DSU forest
         curr_node[ANC] = parent_idx
 
-        # 1d. Compute Implicit Idoms (for nodes in parent's bucket)
-        for b_idx in parent_node[BUCKET]:
+        # 1d. Process Parent's Bucket
+        while parent_node[BUCKET]:
+            b_idx = parent_node[BUCKET].pop()
             b_node = graph[b_idx]
+
             best_b = lt_eval(b_node, graph=graph)
+
             if best_b[SEMI] < b_node[SEMI]:
                 b_node[IDOM] = best_b[PRE]
             else:
                 b_node[IDOM] = parent_idx
 
-        parent_node[BUCKET] = []
-
-    # 2. Second Pass: Final Idom Fix-up
-    for _, node in graph.items():
-        if node[PARENT] is not None and node[IDOM] != node[SEMI]:
+                # 2. Second Pass: Explicit IDOMs
+    for i in range(1, len(graph)):
+        node = graph[i]
+        if node[IDOM] != node[SEMI]:
             node[IDOM] = graph[node[IDOM]][IDOM]
 
     graph[0][IDOM] = None

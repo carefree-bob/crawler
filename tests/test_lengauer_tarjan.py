@@ -108,8 +108,10 @@ class TestInit(BaseCase):
         })
 
 class TestExamples(BaseCase):
-    def test_examples(self):
-        for g in self.graphs:
+
+    def test_lt_with_examples(self):
+        for i, g in enumerate(self.graphs):
+            # print(f"graph {i}")
             start, _ = next(iter(g.items()))
             nx_g = g_to_nx(g)
             graph, pre, rev = gen_lt_graph(g)
