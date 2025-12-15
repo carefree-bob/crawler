@@ -29,6 +29,26 @@ class LTNode(TypedDict):
 g_node_t = LTNode
 lt_graph_t = Dict[int, LTNode]
 
+
+class ONS_Node_t(TypedDict):
+    """Data structure for ONS combines dominator tree relations
+       with tracking data for SCC loop detection
+    """
+    pre: int
+    succs: list[ONS_Node_t]
+    preds: list[ONS_Node_t]
+    idom: int | None
+    succs_dom: list[ONS_Node_t]  # successors in the dom-tree graph
+    level: int # depth in dominator tree
+    weight: int # split weight
+    copy: ONS_Node_t # holds reference to a temporary copy of this node used in splitting
+    header: ONS_Node_t # points to header node, if this is the header node, points to itself
+    done: bool # used when processing through entire graph
+    active: bool # used to determine whether a successor node is also an ancestor of curr node
+    sp_back_data: tuple[int, int] | None # used to store back-edge data
+
+ons_graph_t: TypeAlias=dict[int, ONS_Node_t]
+
 class Reduce(Enum):
     T1 = "T1"
     T2 = "T2"

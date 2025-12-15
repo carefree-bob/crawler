@@ -1,5 +1,6 @@
 from src.lib.crawler_type import graph_t, order_t
 
+
 def dfs_pre_order_traversal(graph: graph_t) -> order_t:
     """Perform depth first search and return post-order ordering
 

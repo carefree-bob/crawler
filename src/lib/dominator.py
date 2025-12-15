@@ -2,6 +2,9 @@ from src.lib.crawler_type import graph_t, lt_graph_t
 from src.lib.graph_utils import reverse_graph
 from src.lib.lengauer_tarjan import gen_lt_graph
 
+
+
+
 def get_dominator_tree(g: graph_t)->graph_t:
     """Given a graph, return the dominator tree for the graph
 
@@ -13,6 +16,13 @@ def get_dominator_tree(g: graph_t)->graph_t:
     """
     graph, pre, rev = gen_lt_graph(g)
     start, _ = next(iter(g.items()))
+
+    # rev is the mapping from pre-ordering of lt-graph to whatever ordering the original graph came in
+    return get_dominator_tree_from_nodal(graph, rev)
+
+def get_dominator_tree_from_nodal(graph: lt_graph_t, rev: dict[int, int]=None):
+    if rev is None:
+        rev = {i:i for i in range(len(graph))}
     dom_tree = {x: [] for x in rev.values()}  # init
     for idx, node in graph.items():
         orig_idx = rev[idx]
